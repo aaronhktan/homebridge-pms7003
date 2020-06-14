@@ -32,11 +32,9 @@ int main(int argc, char **argv) {
   while (1) {
     // Read characters until we see 0x42, which is the first byte in the
     // data frame of UART
-    read(uartfd, (void *)&rx_buf, 1); 
-    while (rx_buf[0] != 0x42) {
+    do {
       read(uartfd, (void *)&rx_buf, 1);
-      usleep(10000);
-    }
+    } while (rx_buf[0] != 0x42);
 
     // Once we have the start character, we can read the other 31 bytes
     // of the frame. 
@@ -89,9 +87,6 @@ int main(int argc, char **argv) {
     printf("Particles > 10µm in 0.1L air: %d\n", bucket10);
 
     // Bytes 29 and 30 are not used except for in the check code
-    // printf("28: 0x%x, 29: 0x%x, 30: 0x%x, 31: 0x%x\n", rx_buf[28], rx_buf[29],
-    // rx_buf[30], rx_buf[31]);
-
     printf("Calculated check code: 0x%x; check code: 0x%x\n", rx_buf[0] 
       + rx_buf[1] + rx_buf[2] + rx_buf[3] + pm1_0_s + pm2_5_s + pm10_s + pm1_0
       + pm2_5 + pm10 + bucket0_3 + bucket0_5 + bucket1_0 + bucket2_5
