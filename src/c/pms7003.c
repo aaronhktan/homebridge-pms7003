@@ -63,9 +63,11 @@ int PMS7003_deinit() {
 }
 
 int PMS7003_read(int timeout_ms, pms7003_data *data) {
-  uint8_t rx_buf[32];
+  if (timeout_ms < 0) {
+    debug_printf(stderr, "%s", "Invalid timeout specified\n");
+    return ERROR_INVAL;
+  }
 
-  // Wait until timeout_ms have passed for a message on UART
   struct epoll_event events[MAX_EVENTS];
   int num_events = epoll_wait(epollfd, events, MAX_EVENTS, timeout_ms);
   if (!num_events) {
@@ -73,8 +75,10 @@ int PMS7003_read(int timeout_ms, pms7003_data *data) {
     return ERROR_TIMEOUT;
   }
 
+  // Wait until timeout_ms have passed for a message on UART
   // Read characters until we see 0x42, which is the first byte in the
   // data frame of UART
+  uint8_t rx_buf[32];
   do {
     read(uartfd, (void *)&rx_buf, 1);
   } while (rx_buf[0] != 0x42);
@@ -138,7 +142,7 @@ int PMS7003_read(int timeout_ms, pms7003_data *data) {
   } 
   uint16_t check = rx_buf[30] << 8 | rx_buf[31];
   debug_print(stderr, "Calculated check code: 0x%x; check code: 0x%x\n",
-      calculated_check, check);
+    calculated_check, check);
 
   if (calculated_check != check) {
     debug_print(stderr, "Calculated check 0x%x does not match 0x%x\n",
@@ -153,7 +157,7 @@ int PMS7003_read(int timeout_ms, pms7003_data *data) {
   data->pm1_0 = pm1_0;
   data->pm2_5 = pm2_5;
   data->pm10 = pm10;
-                   
+
   data->bucket0_3 = bucket0_3;
   data->bucket0_5 = bucket0_5; 
   data->bucket1_0 = bucket1_0; 

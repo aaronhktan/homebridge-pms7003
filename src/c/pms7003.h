@@ -12,7 +12,6 @@
 
 enum Error {
   NO_ERROR,
-  ERROR_DEVICE,         // Couldn't find device
   ERROR_INVAL,          // Invalid argument
   ERROR_DRIVER,         // UART or epoll failed to read data
   ERROR_TIMEOUT,        // Timeout parameter reached
