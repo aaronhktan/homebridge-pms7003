@@ -59,8 +59,8 @@ Napi::Object read(const Napi::CallbackInfo &info) {
   returnObject.Set(Napi::String::New(env, "bucket0_5"), Napi::Number::New(env, data.bucket0_5));
   returnObject.Set(Napi::String::New(env, "bucket1_0"), Napi::Number::New(env, data.bucket1_0));
   returnObject.Set(Napi::String::New(env, "bucket2_5"), Napi::Number::New(env, data.bucket2_5));
-  returnObject.Set(Napi::String::New(env, "bucket_5_0"), Napi::Number::New(env, data.bucket5_0));
-  returnObject.Set(Napi::String::New(env, "bucket_10"), Napi::Number::New(env, data.bucket10));
+  returnObject.Set(Napi::String::New(env, "bucket5_0"), Napi::Number::New(env, data.bucket5_0));
+  returnObject.Set(Napi::String::New(env, "bucket10"), Napi::Number::New(env, data.bucket10));
   return returnObject;
 }
 

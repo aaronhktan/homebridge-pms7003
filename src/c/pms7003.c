@@ -122,12 +122,12 @@ int PMS7003_read(int timeout_ms, pms7003_data *data) {
   uint16_t bucket5_0 = rx_buf[23] << 8 | rx_buf[25];
   uint16_t bucket10 = rx_buf[26] << 8 | rx_buf[27];
   
-  debug_print(stdout, "PM1.0 standard concentration: %dμg\n", pm1_0_s);
-  debug_print(stdout, "PM2.5 standard concentration: %dμg\n", pm2_5_s);
-  debug_print(stdout, "PM10 standard concentration: %dμg\n", pm10_s);
-  debug_print(stdout, "PM1.0 concentration: %dμg\n", pm1_0);
-  debug_print(stdout, "PM2.5 concentration: %dμg\n", pm2_5);
-  debug_print(stdout, "PM10 concentration: %dμg\n", pm10);
+  debug_print(stdout, "PM1.0 standard concentration: %dμg/m3\n", pm1_0_s);
+  debug_print(stdout, "PM2.5 standard concentration: %dμg/m3\n", pm2_5_s);
+  debug_print(stdout, "PM10 standard concentration: %dμg/m3\n", pm10_s);
+  debug_print(stdout, "PM1.0 concentration: %dμg/m3\n", pm1_0);
+  debug_print(stdout, "PM2.5 concentration: %dμg/m3\n", pm2_5);
+  debug_print(stdout, "PM10 concentration: %dμg/m3\n", pm10);
   debug_print(stdout, "Particles > 0.3µm in 0.1L air: %d\n", bucket0_3);
   debug_print(stdout, "Particles > 0.5µm in 0.1L air: %d\n", bucket0_5);
   debug_print(stdout, "Particles > 1.0µm in 0.1L air: %d\n", bucket1_0);
