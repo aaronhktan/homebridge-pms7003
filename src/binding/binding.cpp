@@ -41,7 +41,7 @@ Napi::Object read(const Napi::CallbackInfo &info) {
 
   // Read data
   pms7003_data data;
-  err = PMS7003_read(timeout, &data);
+  int err = PMS7003_read(timeout, &data);
   if (err) {
     PMS7003_deinit();
     return BindingUtils::errFactory(env, err, "Failed to read data");
@@ -49,18 +49,18 @@ Napi::Object read(const Napi::CallbackInfo &info) {
 
   // Put return values into an object
   Napi::Object returnObject = Napi::Object::New(env);
-  returnObject.Set(Napi::String::New(env, "pm1_s"), Napi::Number::New(env, data.pm_1_0_s));
-  returnObject.Set(Napi::String::New(env, "pm2_5_s"), Napi::Number::New(env, data.pm_2_5_s));
-  returnObject.Set(Napi::String::New(env, "pm10_s"), Napi::Number::New(env, data.pm_10_s));
-  returnObject.Set(Napi::String::New(env, "pm1_0"), Napi::Number::New(env, data.pm_1_0));
-  returnObject.Set(Napi::String::New(env, "pm2_5"), Napi::Number::New(env, data.pm_2_5));
-  returnObject.Set(Napi::String::New(env, "pm10"), Napi::Number::New(env, data.pm_10));
-  returnObject.Set(Napi::String::New(env, "bucket0_3"), Napi::Number::New(env, bucket_0_3));
-  returnObject.Set(Napi::String::New(env, "bucket0_5"), Napi::Number::New(env, bucket_0_5));
-  returnObject.Set(Napi::String::New(env, "bucket1_0"), Napi::Number::New(env, bucket1_0));
-  returnObject.Set(Napi::String::New(env, "bucket2_5"), Napi::Number::New(env, bucket2_5));
-  returnObject.Set(Napi::String::New(env, "bucket_5_0"), Napi::Number::New(env, bucket_5_0));
-  returnObject.Set(Napi::String::New(env, "bucket_10"), Napi::Number::New(env, bucket_10));
+  returnObject.Set(Napi::String::New(env, "pm1_s"), Napi::Number::New(env, data.pm1_0_s));
+  returnObject.Set(Napi::String::New(env, "pm2_5_s"), Napi::Number::New(env, data.pm2_5_s));
+  returnObject.Set(Napi::String::New(env, "pm10_s"), Napi::Number::New(env, data.pm10_s));
+  returnObject.Set(Napi::String::New(env, "pm1_0"), Napi::Number::New(env, data.pm1_0));
+  returnObject.Set(Napi::String::New(env, "pm2_5"), Napi::Number::New(env, data.pm2_5));
+  returnObject.Set(Napi::String::New(env, "pm10"), Napi::Number::New(env, data.pm10));
+  returnObject.Set(Napi::String::New(env, "bucket0_3"), Napi::Number::New(env, data.bucket0_3));
+  returnObject.Set(Napi::String::New(env, "bucket0_5"), Napi::Number::New(env, data.bucket0_5));
+  returnObject.Set(Napi::String::New(env, "bucket1_0"), Napi::Number::New(env, data.bucket1_0));
+  returnObject.Set(Napi::String::New(env, "bucket2_5"), Napi::Number::New(env, data.bucket2_5));
+  returnObject.Set(Napi::String::New(env, "bucket_5_0"), Napi::Number::New(env, data.bucket5_0));
+  returnObject.Set(Napi::String::New(env, "bucket_10"), Napi::Number::New(env, data.bucket10));
   return returnObject;
 }
 

@@ -16,7 +16,7 @@ int PMS7003_init() {
   // O_NOCTTY to make the serial port not the controlling terminal for the process
   uartfd = open("/dev/serial0", O_RDONLY | O_NOCTTY);
   if (uartfd == -1) {
-    fprintf(stderr, "Couldn't open /dev/serial0\n");
+    debug_print(stderr, "%s", "Couldn't open /dev/serial0\n");
     return ERROR_DRIVER;
   }
 
@@ -32,14 +32,14 @@ int PMS7003_init() {
  
   // Make sure changes propagated fine
   if (uartfd == -1) {
-    fprintf(stderr, "Failed after configuring file descriptor");
+    debug_print(stderr, "%s", "Failed after configuring file descriptor");
     return ERROR_DRIVER;
   }
 
   // Create epoll file descriptor to watch for events on uart fd
   epollfd = epoll_create1(0);
   if (epollfd == -1) {
-    fprintf(stderr, "Couldn't create epoll file descriptor\n");
+    debug_print(stderr, "%s", "Couldn't create epoll file descriptor\n");
     return ERROR_DRIVER;
   } 
 
@@ -48,7 +48,7 @@ int PMS7003_init() {
   event.events = EPOLLIN;
   event.data.fd = uartfd;
   if (epoll_ctl(epollfd, EPOLL_CTL_ADD, uartfd, &event)) {
-    fprintf(stderr, "Couldn't add uartfd to epoll\n");
+    debug_print(stderr, "%s", "Couldn't add uartfd to epoll\n");
     return ERROR_DRIVER;
   }
 
@@ -64,7 +64,7 @@ int PMS7003_deinit() {
 
 int PMS7003_read(int timeout_ms, pms7003_data *data) {
   if (timeout_ms < 0) {
-    debug_printf(stderr, "%s", "Invalid timeout specified\n");
+    debug_print(stderr, "%s", "Invalid timeout specified\n");
     return ERROR_INVAL;
   }
 
