@@ -19,19 +19,22 @@ enum Error {
   ERROR_CHECK           // Check codes do not match
 };
 
+// Standard concentration is concentration for air
+// at ICAO standard atmosphere (288.15K, 1013.25hPa at sea level)
+// https://publiclab.org/questions/samr/04-07-2019/how-to-interpret-pms5003-sensor-values
 typedef struct pms7003_data_s {
-  uint16_t pm1_0_s;
-  uint16_t pm2_5_s;
-  uint16_t pm10_s; 
-  uint16_t pm1_0;
-  uint16_t pm2_5;
-  uint16_t pm10;
-  uint16_t bucket0_3;
-  uint16_t bucket0_5;
-  uint16_t bucket1_0;
-  uint16_t bucket2_5;
-  uint16_t bucket5_0;
-  uint16_t bucket10;
+  uint16_t pm1_0_s;     // Standard PM1.0 concentration
+  uint16_t pm2_5_s;     // Standard factory PM2.5 concentration
+  uint16_t pm10_s;      // Standard factory PM10 concentration 
+  uint16_t pm1_0;       // Current PM1.0 concentration
+  uint16_t pm2_5;       // Current PM2.5 concentration
+  uint16_t pm10;        // Current PM10 concentration
+  uint16_t bucket0_3;   // Particles of size 0.3µm<x<0.5µm
+  uint16_t bucket0_5;   // Particles of size 0.5µm≤x<1.0µm
+  uint16_t bucket1_0;   // Particles of size 1.0µm≤x<2.5µm
+  uint16_t bucket2_5;   // Particles of size 2.5µm≤x<5.0µm
+  uint16_t bucket5_0;   // Particles of size 5.0µm≤x<10µm
+  uint16_t bucket10;    // Particles of size >10µm
 } pms7003_data;
 
 #define PMS7003_START_CHAR 0x42;
