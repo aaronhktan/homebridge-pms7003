@@ -2,9 +2,7 @@
 
 This is a Homebridge plugin for PMS7003 dust/particulate matter sensor, working on the Raspberry Pi 3 or Zero.
 
-It uses read() and write() syscalls on the UART devices exposed by Linux's filesystem.
-
-<img src="/docs/eve.png?raw=true" style="margin: 5px"> <img src="/docs/home.png?raw=true" style="margin: 5px">
+It uses read() and write() syscalls on the UART devices exposed by Linux's filesystem, and epoll to watch for messages on the UART file descriptor with a timeout.
 
 ## Configuration
 
