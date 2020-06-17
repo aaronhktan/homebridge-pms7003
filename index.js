@@ -325,7 +325,7 @@ PMS7003Accessory.prototype.refreshData = function() {
     this.publishToMQTT(this.B1_0Topic, data.bucket1_0);
     this.publishToMQTT(this.B2_5Topic, data.bucket2_5);
     this.publishToMQTT(this.B5_0Topic, data.bucket5_0);
-    this.publishToMQTT(this.B10Topic, data.bucket_10);
+    this.publishToMQTT(this.B10Topic, data.bucket10);
   }
 }
 
