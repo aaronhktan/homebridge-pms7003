@@ -13,7 +13,7 @@ static int uartfd = -1;
 static int epollfd = -1;
 
 // Check code is first 30 bytes added together
-static int check(uint8_t *data) {
+static int verify_checkcode(uint8_t *data) {
   uint16_t calculated_check = 0;
   for (int i = 0; i < 30; i++) {
     calculated_check += data[i];
@@ -64,7 +64,7 @@ static int read_data(int fd, uint8_t *data) {
   }
 
   // Check calculated check code vs sent check code
-  int rv = check(data);
+  int rv = verify_checkcode(data);
   if (rv) {
     debug_print(stderr, "%s\n", "Calculated check code does not match!");
     return rv;
@@ -119,14 +119,14 @@ static int process_data(uint8_t *data, pms7003_data *out) {
 }
 
 int PMS7003_init() {
-  // O_NOCTTY to make the serial port not the controlling terminal for the process
+  // O_NOCTTY to make the RPi not the controlling terminal for the process
   uartfd = open("/dev/serial0", O_RDONLY | O_NOCTTY);
   if (uartfd == -1) {
     debug_print(stderr, "%s\n", "Couldn't open /dev/serial0");
     return ERROR_DRIVER;
   }
 
-  // Configure file descriptor for serial 0
+  // Configure file descriptor for the UART port
   struct termios opts;
   tcgetattr(uartfd, &opts); // Get attributes for the serial terminal port
   opts.c_iflag = IGNPAR;  // Ignore framing/parity errors
@@ -141,14 +141,14 @@ int PMS7003_init() {
     return ERROR_DRIVER;
   }
 
-  // Create epoll file descriptor to watch for events on uart fd
+  // Create epoll file descriptor
   epollfd = epoll_create1(0);
   if (epollfd == -1) {
     debug_print(stderr, "%s\n", "Couldn't create epoll file descriptor");
     return ERROR_DRIVER;
   }
 
-  // Add uartfd to epoll
+  // Add uartfd to epoll to watch for events on uartfd
   struct epoll_event event;
   event.events = EPOLLIN;
   event.data.fd = uartfd;
@@ -181,15 +181,14 @@ int PMS7003_read(int timeout_ms, pms7003_data *out) {
     return ERROR_TIMEOUT;
   }
 
-  // Read data from UART file descriptor
+  // Read and process data from UART file descriptor
   uint8_t rx_buf[32];
   int rv = read_data(uartfd, rx_buf);
   if (rv) {
     return rv;
   }
-
-  // Process the data
   process_data(rx_buf, out);
+
   return NO_ERROR;
 }
 
