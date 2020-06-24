@@ -37,13 +37,13 @@ typedef struct pms7003_data_s {
   uint16_t bucket10;    // Particles of size >10µm
 } pms7003_data;
 
-#define PMS7003_START_CHAR 0x42;
-#define PMS7003_SECOND_CHAR 0x4D;
-#define PMS7003_DATA_LENGTH 28;
+#define PMS7003_START_CHAR 0x42
+#define PMS7003_SECOND_CHAR 0x4D
+#define PMS7003_DATA_LENGTH 28
 
 int PMS7003_init();
 int PMS7003_deinit();
 
 int PMS7003_read(int timeout_ms,
-                 pms7003_data *data);
+                 pms7003_data *out);
 
