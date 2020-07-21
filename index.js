@@ -295,7 +295,7 @@ PMS7003Accessory.prototype.refreshData = function() {
   let data = PMS7003.read(1000);
 
   if (data.hasOwnProperty('errcode')) {
-    this.log(`Error: ${data.errcode}, ${data.errmsg}`);
+    this.log.debug(`Error: ${data.errcode}, ${data.errmsg}`);
     // Updating a value with Error class sets status in HomeKit to 'Not responding'
     this.airQualityService.getCharacteristic(Characteristic.PM10Density)
       .updateValue(Error(data.errmsg));

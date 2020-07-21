@@ -43,7 +43,6 @@ Napi::Object read(const Napi::CallbackInfo &info) {
   pms7003_data data;
   int err = PMS7003_read(timeout, &data);
   if (err) {
-    PMS7003_deinit();
     return BindingUtils::errFactory(env, err, "Failed to read data");
   }
 
