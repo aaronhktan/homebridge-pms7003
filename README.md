@@ -6,7 +6,7 @@ It uses read() and write() syscalls on the UART devices exposed by Linux's files
 
 ## Configuration
 
-The PMS7003 must be connected to pins BCM14/BCM15 on a Raspberry Pi 3/Zero.
+The PMS7003 must be connected to pins BCM14/BCM15 on a Raspberry Pi 3/Zero. **Before running this plugin, you must add the `homebridge` user to the `dialout` group so Homebridge can access the serial port. `sudo adduser homebridge dialout`** 
 
 | Field name           | Description                                                                | Type / Unit    | Default value       | Required? |
 | -------------------- |:-------------------------------------------------------------------------- |:--------------:|:-------------------:|:---------:|

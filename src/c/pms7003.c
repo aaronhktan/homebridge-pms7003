@@ -117,7 +117,7 @@ static int process_data(uint8_t *data, pms7003_data *out) {
 
 int PMS7003_init() {
   // O_NOCTTY to make the RPi not the controlling terminal for the process
-  uartfd = open("/dev/serial0", O_RDWR | O_NOCTTY);
+  uartfd = open("/dev/serial0", O_RDONLY | O_NOCTTY);
   if (uartfd == -1) {
     debug_print(stderr, "%s\n", "Couldn't open /dev/serial0");
     return ERROR_DRIVER;
