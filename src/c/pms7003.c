@@ -1,6 +1,7 @@
 #include "pms7003.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>   // POSIX APIs
 #include <fcntl.h>    // open(), read(), write()
 #include <termios.h>  // For terminal devices, aka serial port
@@ -35,19 +36,15 @@ static int read_data(int fd, uint8_t *data) {
   // Read characters until we see 0x42, which is the first byte in the
   // data frame of UART
   do {
-    read(fd, (void *)&data, 1);
+    read(fd, (void *)data, 1);
   } while (data[0] != PMS7003_START_CHAR);
 
   // Once we have the start character, we can read the other 31 bytes
   // of the frame.
-  int rx_length = read(fd, (void *)&data[1], 31);
-
-  if (rx_length < 0) {
-    debug_print(stderr, "%s\n", "Unable to read from UART");
-    return ERROR_DRIVER;
-  } else if (rx_length == 0) {
-    debug_print(stderr, "%s\n", "No data received...");
-    return ERROR_DRIVER;
+  // For some reason, read(fd, &data[1], 31) doesn't cooperate;
+  // using a for loop instead works.
+  for (int i = 1; i < 32; i++) {
+    read(fd, &data[i], 1);
   }
 
   // First two bytes are start fixed start characters
@@ -120,7 +117,7 @@ static int process_data(uint8_t *data, pms7003_data *out) {
 
 int PMS7003_init() {
   // O_NOCTTY to make the RPi not the controlling terminal for the process
-  uartfd = open("/dev/serial0", O_RDONLY | O_NOCTTY);
+  uartfd = open("/dev/serial0", O_RDWR | O_NOCTTY);
   if (uartfd == -1) {
     debug_print(stderr, "%s\n", "Couldn't open /dev/serial0");
     return ERROR_DRIVER;
@@ -133,8 +130,8 @@ int PMS7003_init() {
   opts.c_oflag = 0;    // Output modes, don't need any of these
   opts.c_cflag = B9600 | CS8 | CLOCAL | CREAD; // 9600bd, 8-bit char, ignore modem status lines, enable receiving
   opts.c_lflag = 0;    // Local modes, don't need any of these
-  tcsetattr(uartfd, TCSANOW, &opts); // Set the options immediately
   tcflush(uartfd, TCIFLUSH);  // Flush the terminal
+  tcsetattr(uartfd, TCSANOW, &opts); // Set the options immediately
 
   if (uartfd == -1) {
     debug_print(stderr, "%s\n", "Failed after configuring file descriptor");
@@ -181,13 +178,16 @@ int PMS7003_read(int timeout_ms, pms7003_data *out) {
     return ERROR_TIMEOUT;
   }
 
+  tcflush(uartfd, TCIFLUSH);  // Flush the terminal
+
   // Read and process data from UART file descriptor
   uint8_t rx_buf[32];
-  int rv = read_data(uartfd, rx_buf);
+  memset(rx_buf, 0, 32);
+  int rv = read_data(uartfd, (void *)rx_buf);
   if (rv) {
     return rv;
   }
-  process_data(rx_buf, out);
+  process_data((void *)rx_buf, out);
 
   return NO_ERROR;
 }
