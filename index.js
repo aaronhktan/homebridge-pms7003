@@ -82,7 +82,7 @@ function PMS7003Accessory(log, config) {
   // Periodically update the values
   this.setupPMS7003();
   this.refreshData();
-  setInterval(() => this.refreshData(), 1000);
+  setInterval(() => this.refreshData(), 10000);
 }
 
 // Error checking and averaging when saving PM2.5 and PM10
@@ -94,7 +94,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
       return;
     }
 
-    if (this._2_5Samples.length == 30) {
+    if (this._2_5Samples.length == 6) {
       let firstSample = this._2_5Samples.shift();
       this._2_5CumSum -= firstSample;
     }
@@ -102,10 +102,10 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
     this._2_5CumSum += PM2_5Reading;
     this._2_5Counter++;
 
-    // Update current PM2.5 value, and publish to MQTT/FakeGato once every 30 seconds
-    if (this._2_5Counter == 30) {
+    // Update current PM2.5 value, and publish to MQTT/FakeGato once every 60 seconds
+    if (this._2_5Counter == 6) {
       this._2_5Counter = 0;
-      this._currentPM2_5 = this._2_5CumSum / 30;
+      this._currentPM2_5 = this._2_5CumSum / 6;
       this.log(`PM2.5: ${this._currentPM2_5}`);
 
       this.airQualityService.getCharacteristic(Characteristic.PM2_5Density)
@@ -157,17 +157,17 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
 
     // Calculate running average of PM10 over the last 30 samples
     this._10Counter++;
-    if (this._10Samples.length == 30) {
+    if (this._10Samples.length == 6) {
       let firstSample = this._10Samples.shift();
       this._10CumSum -= firstSample;
     }
     this._10Samples.push(PM10Reading);
     this._10CumSum += PM10Reading;
 
-    // Publish TVOC to MQTT every 30 seconds
-    if (this._10Counter == 30) {
+    // Publish TVOC to MQTT every 60 seconds
+    if (this._10Counter == 6) {
       this._10Counter = 0;
-      this._currentPM10 = this._10CumSum / 30;
+      this._currentPM10 = this._10CumSum / 6;
       this.log(`PM10: ${this._currentPM10}`);
 
       this.airQualityService.getCharacteristic(Characteristic.PM10Density)
@@ -202,7 +202,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "B0_3", {
       return;
     }
 
-    if (this._B0_3Samples.length == 30) {
+    if (this._B0_3Samples.length == 6) {
       let firstSample = this._B0_3Samples.shift();
       this._B0_3CumSum -= firstSample;
     }
@@ -210,10 +210,10 @@ Object.defineProperty(PMS7003Accessory.prototype, "B0_3", {
     this._B0_3CumSum += B0_3Reading;
     this._B0_3Counter++;
 
-    // Update current 0.3µm bucket value, and publish to MQTT/FakeGato once every 30 seconds
-    if (this._B0_3Counter == 30) {
+    // Update current 0.3µm bucket value, and publish to MQTT/FakeGato once every 60 seconds
+    if (this._B0_3Counter == 6) {
       this._B0_3Counter = 0;
-      this._currentB0_3 = this._B0_3CumSum / 30;
+      this._currentB0_3 = this._B0_3CumSum / 6;
       this.log(`Particles >0.3µm and <0.5µm: ${this._currentB0_3}`);
 
       this.humidityService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
@@ -315,7 +315,7 @@ PMS7003Accessory.prototype.refreshData = function() {
 
   // Publish the other values to MQTT if required
   this._otherCounter++;
-  if (this.enableMQTT && this._otherCounter == 30) {
+  if (this.enableMQTT && this._otherCounter == 6) {
     this._otherCounter = 0;
     this.publishToMQTT(this.PM1_0STopic, data.pm1_s);
     this.publishToMQTT(this.PM2_5STopic, data.pm2_5_s);
