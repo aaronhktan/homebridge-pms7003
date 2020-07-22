@@ -22,8 +22,8 @@ function PMS7003Accessory(log, config) {
   // Load configuration from files
   this.log = log;
   this.displayName = config['name'];
-  this.showTemperatureTile = typeof config['showTemperatureTile'] === 'undefined' ? true : config['showTemperatureTile'];
-  this.showHumidityTile = typeof config['showHumidityTile'] === 'undefined' ? true : config['showHumidityTile'];
+  this.showTemperatureTile = config['showTemperatureTile'] || false;
+  this.showHumidityTile = config['showHumidityTile'] || false;
   this.enableFakeGato = config['enableFakeGato'] || false;
   this.fakeGatoStoragePath = config['fakeGatoStoragePath'];
   this.enableMQTT = config['enableMQTT'] || false;
@@ -94,6 +94,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
       return;
     }
 
+    // Used to calculate running average of PM2.5 over the last 6 samples
     if (this._2_5Samples.length == 6) {
       let firstSample = this._2_5Samples.shift();
       this._2_5CumSum -= firstSample;
@@ -102,43 +103,47 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
     this._2_5CumSum += PM2_5Reading;
     this._2_5Counter++;
 
-    // Update current PM2.5 value, and publish to MQTT/FakeGato once every 60 seconds
-    if (this._2_5Counter == 6) {
-      this._2_5Counter = 0;
-      this._currentPM2_5 = this._2_5CumSum / 6;
-      this.log(`PM2.5: ${this._currentPM2_5}`);
+    // Update PM2.5 value using average over the last 6 samples,
+    // and publish to MQTT/FakeGato once every 6 samples
+    if (this._2_5Counter != 6) {
+      return;
+    }
 
-      this.airQualityService.getCharacteristic(Characteristic.PM2_5Density)
-        .updateValue(this._currentPM2_5);
-      this.airQualityService.getCharacteristic(CustomCharacteristic.EveAirQuality)
-        .updateValue(this._currentPM2_5);
-      if (this._currentPM2_5 <= 15) {
-        this.airQualityService.getCharacteristic(Characteristic.AirQuality)
-          .updateValue(1);
-      } else if (this._currentPM2_5 > 15 && this._currentPM2_5 <= 40) {
-        this.airQualityService.getCharacteristic(Characteristic.AirQuality)
-          .updateValue(2);
-      } else if (this._currentPM2_5 > 40 && this._currentPM2_5 <= 65) {
-        this.airQualityService.getCharacteristic(Characteristic.AirQuality)
-          .updateValue(3);
-      } else if (this._currentPM2_5 > 65 && this._currentPM2_5 <= 150) {
-        this.airQualityService.getCharacteristic(Characteristic.AirQuality)
-          .updateValue(4);
-      } else {
-        this.airQualityService.getCharacteristic(Characteristic.AirQuality)
-          .updateValue(5);
-      }
+    this._2_5Counter = 0;
+    this._currentPM2_5 = this._2_5CumSum / 6;
+    this.log(`PM2.5: ${this._currentPM2_5}`);
+
+    this.airQualityService.getCharacteristic(Characteristic.PM2_5Density)
+      .updateValue(this._currentPM2_5);
+    this.airQualityService.getCharacteristic(CustomCharacteristic.EveAirQuality)
+      .updateValue(this._currentPM2_5);
+
+    if (this._currentPM2_5 <= 15) {
+      this.airQualityService.getCharacteristic(Characteristic.AirQuality)
+        .updateValue(1);
+    } else if (this._currentPM2_5 <= 40) {
+      this.airQualityService.getCharacteristic(Characteristic.AirQuality)
+        .updateValue(2);
+    } else if (this._currentPM2_5 <= 65) {
+      this.airQualityService.getCharacteristic(Characteristic.AirQuality)
+        .updateValue(3);
+    } else if (this._currentPM2_5 <= 150) {
+      this.airQualityService.getCharacteristic(Characteristic.AirQuality)
+        .updateValue(4);
+    } else {
+      this.airQualityService.getCharacteristic(Characteristic.AirQuality)
+        .updateValue(5);
+    }
  
-      if (this.enableFakeGato) {
-        this.fakeGatoHistoryService.addEntry({
-          time: moment().unix(),
-          ppm: this._currentPM2_5 + 450, // Eve has a 450ppm floor for graphing, so add 450 to compensate 
-        });
-      }
+    if (this.enableFakeGato) {
+      this.fakeGatoHistoryService.addEntry({
+        time: moment().unix(),
+        ppm: this._currentPM2_5 + 450, // Eve has a 450ppm floor for graphing, so add 450 to compensate 
+      });
+    }
  
-      if (this.enableMQTT) {
-        this.publishToMQTT(this.PM2_5Topic, this._currentPM2_5);
-      }
+    if (this.enableMQTT) {
+      this.publishToMQTT(this.topics.PM2_5Topic, this._currentPM2_5);
     }
   },
 
@@ -147,6 +152,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
   }
 });
 
+// Basically the same things we're doing with PM2.5
 Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
   set: function(PM10Reading) {
     if (PM10Reading > 1000 || PM10Reading < 0) {
@@ -155,7 +161,6 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
       return;
     }
 
-    // Calculate running average of PM10 over the last 30 samples
     this._10Counter++;
     if (this._10Samples.length == 6) {
       let firstSample = this._10Samples.shift();
@@ -164,28 +169,28 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
     this._10Samples.push(PM10Reading);
     this._10CumSum += PM10Reading;
 
-    // Publish TVOC to MQTT every 60 seconds
-    if (this._10Counter == 6) {
-      this._10Counter = 0;
-      this._currentPM10 = this._10CumSum / 6;
-      this.log(`PM10: ${this._currentPM10}`);
+    if (this._10Counter != 6) {
+      return;
+    }
 
-      this.airQualityService.getCharacteristic(Characteristic.PM10Density)
-       .updateValue(this._currentPM10);
- 
-      this.temperatureService.getCharacteristic(Characteristic.CurrentTemperature)
-        .updateValue(this._currentPM10);
+    this._10Counter = 0;
+    this._currentPM10 = this._10CumSum / 6;
+    this.log(`PM10: ${this._currentPM10}`);
 
-      if (this.enableFakeGato) {
-        this.fakeGatoHistoryService.addEntry({
-          time: moment().unix(),
-          temp: this._currentPM10,
-        });
-      }
-      
-      if (this.enableMQTT) {
-        this.publishToMQTT(this.PM10Topic, this._currentPM10);
-      }
+    this.airQualityService.getCharacteristic(Characteristic.PM10Density)
+     .updateValue(this._currentPM10);
+    this.temperatureService.getCharacteristic(Characteristic.CurrentTemperature)
+      .updateValue(this._currentPM10);
+
+    if (this.enableFakeGato) {
+      this.fakeGatoHistoryService.addEntry({
+        time: moment().unix(),
+        temp: this._currentPM10,
+      });
+    }
+    
+    if (this.enableMQTT) {
+      this.publishToMQTT(this.topics.PM10Topic, this._currentPM10);
     }
   },
 
@@ -194,6 +199,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
   }
 });
 
+// Basically the same thing as PM2.5, but with the 0.3-0.5µm bucket of particles
 Object.defineProperty(PMS7003Accessory.prototype, "B0_3", {
   set: function(B0_3Reading) {
     if (B0_3Reading > 10000 || B0_3Reading < 0) {
@@ -210,25 +216,26 @@ Object.defineProperty(PMS7003Accessory.prototype, "B0_3", {
     this._B0_3CumSum += B0_3Reading;
     this._B0_3Counter++;
 
-    // Update current 0.3µm bucket value, and publish to MQTT/FakeGato once every 60 seconds
-    if (this._B0_3Counter == 6) {
-      this._B0_3Counter = 0;
-      this._currentB0_3 = this._B0_3CumSum / 6;
-      this.log(`Particles >0.3µm and <0.5µm: ${this._currentB0_3}`);
+    if (this._B0_3Counter != 6) {
+      return;
+    }
 
-      this.humidityService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-        .updateValue(this._currentB0_3 / 10000 * 100);
+    this._B0_3Counter = 0;
+    this._currentB0_3 = this._B0_3CumSum / 6;
+    this.log(`Particles >0.3µm and <0.5µm: ${this._currentB0_3}`);
+
+    this.humidityService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
+      .updateValue(this._currentB0_3 / 10000 * 100);
  
-      if (this.enableFakeGato) {
-        this.fakeGatoHistoryService.addEntry({
-          time: moment().unix(),
-          humidity: this._currentB0_3 / 10000 * 100, // Assume maximum 10000 particles, scale to between 0 and 100% for humidity 
-        });
-      }
+    if (this.enableFakeGato) {
+      this.fakeGatoHistoryService.addEntry({
+        time: moment().unix(),
+        humidity: this._currentB0_3 / 10000 * 100, // Assume maximum 10000 particles, scale to between 0 and 100% for humidity 
+      });
+    }
  
-      if (this.enableMQTT) {
-        this.publishToMQTT(this.B0_3Topic, this._currentB0_3);
-      }
+    if (this.enableMQTT) {
+      this.publishToMQTT(this.topics.B0_3Topic, this._currentB0_3);
     }
   },
 
@@ -250,18 +257,26 @@ PMS7003Accessory.prototype.setUpMQTT = function() {
   }
 
   this.mqttUrl = this.mqttConfig.url;
-  this.PM1_0STopic = this.mqttConfig.PM1_0STopic || 'PMS7003/PM1.0 Standard';
-  this.PM2_5STopic = this.mqttConfig.PM2_5STopic || 'PMS7003/PM2.5 Standard';
-  this.PM10STopic = this.mqttConfig.PM10STopic || 'PMS7003/PM10 Standard';
-  this.PM1_0Topic = this.mqttConfig.PM1_0Topic || 'PMS7003/PM1.0';
-  this.PM2_5Topic = this.mqttConfig.PM2_5Topic || 'PMS7003/PM2.5';
-  this.PM10Topic = this.mqttConfig.PM10Topic || 'PMS7003/PM10';
-  this.B0_3Topic = this.mqttConfig.B0_3Topic || 'PMS7003/0.3'; 
-  this.B0_5Topic = this.mqttConfig.B0_5Topic || 'PMS7003/0.5'; 
-  this.B1_0Topic = this.mqttConfig.B1_0Topic || 'PMS7003/1.0'; 
-  this.B2_5Topic = this.mqttConfig.B2_5Topic || 'PMS7003/2.5'; 
-  this.B5_0Topic = this.mqttConfig.B5_0Topic || 'PMS7003/5.0'; 
-  this.B10Topic = this.mqttConfig.B10Topic || 'PMS7003/10'; 
+
+  // Set up topics with default, then copy from config
+  const defaultTopics = {
+    PM1_0STopic: 'PMS7003/PM1.0 Standard',
+    PM2_5STopic: 'PMS7003/PM2.5 Standard',
+    PM10STopic: 'PMS7003/PM10 Standard',
+    PM1_0Topic: 'PMS7003/PM1.0',
+    PM2_5Topic: 'PMS7003/PM2.5',
+    PM10Topic: 'PMS7003/PM10',
+    B0_3Topic: 'PMS7003/0.3',
+    B0_5Topic: 'PMS7003/0.5',
+    B1_0Topic: 'PMS7003/1.0',
+    B2_5Topic: 'PMS7003/2.5',
+    B5_0Topic: 'PMS7003/5.0',
+    B10Topic: 'PMS7003/10'
+  };
+  this.topics = {
+    ...defaultTopics,
+    ...this.mqttConfig
+  };
 
   this.mqttClient = mqtt.connect(this.mqttUrl);
   this.mqttClient.on("connect", () => {
@@ -313,19 +328,19 @@ PMS7003Accessory.prototype.refreshData = function() {
   this.PM10 = data.pm10;
   this.B0_3 = data.bucket0_3;
 
-  // Publish the other values to MQTT if required
+  // Publish the other values to MQTT if enableMQTT set
   this._otherCounter++;
   if (this.enableMQTT && this._otherCounter == 6) {
     this._otherCounter = 0;
-    this.publishToMQTT(this.PM1_0STopic, data.pm1_s);
-    this.publishToMQTT(this.PM2_5STopic, data.pm2_5_s);
-    this.publishToMQTT(this.PM10STopic, data.pm10_s);
-    this.publishToMQTT(this.PM1_0Topic, data.pm1_0);
-    this.publishToMQTT(this.B0_5Topic, data.bucket0_5);
-    this.publishToMQTT(this.B1_0Topic, data.bucket1_0);
-    this.publishToMQTT(this.B2_5Topic, data.bucket2_5);
-    this.publishToMQTT(this.B5_0Topic, data.bucket5_0);
-    this.publishToMQTT(this.B10Topic, data.bucket10);
+    this.publishToMQTT(this.topics.PM1_0STopic, data.pm1_s);
+    this.publishToMQTT(this.topics.PM2_5STopic, data.pm2_5_s);
+    this.publishToMQTT(this.topics.PM10STopic, data.pm10_s);
+    this.publishToMQTT(this.topics.PM1_0Topic, data.pm1_0);
+    this.publishToMQTT(this.topics.B0_5Topic, data.bucket0_5);
+    this.publishToMQTT(this.topics.B1_0Topic, data.bucket1_0);
+    this.publishToMQTT(this.topics.B2_5Topic, data.bucket2_5);
+    this.publishToMQTT(this.topics.B5_0Topic, data.bucket5_0);
+    this.publishToMQTT(this.topics.B10Topic, data.bucket10);
   }
 }
 

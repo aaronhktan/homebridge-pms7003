@@ -178,8 +178,6 @@ int PMS7003_read(int timeout_ms, pms7003_data *out) {
     return ERROR_TIMEOUT;
   }
 
-  tcflush(uartfd, TCIFLUSH);  // Flush the terminal
-
   // Read and process data from UART file descriptor
   uint8_t rx_buf[32];
   memset(rx_buf, 0, 32);
