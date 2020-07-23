@@ -4,9 +4,12 @@ This is a Homebridge plugin for PMS7003 dust/particulate matter sensor, working 
 
 It uses read() and write() syscalls on the UART devices exposed by Linux's filesystem, and epoll to watch for messages on the UART file descriptor with a timeout.
 
+
+<img src="/docs/eve.png?raw=true" style="margin: 5px"> <img src="/docs/home.png?raw=true" style="margin: 5px">
+
 ## Configuration
 
-The PMS7003 must be connected to pins BCM14/BCM15 on a Raspberry Pi 3/Zero. **Before running this plugin, you must add the `homebridge` user to the `dialout` group so Homebridge can access the serial port. `sudo adduser homebridge dialout`** 
+The PMS7003 must be connected to pins BCM14/BCM15 on a Raspberry Pi 3/Zero. **Before running this plugin, you must add the `homebridge` user to the `dialout` group so Homebridge can access the serial port. `sudo adduser homebridge dialout`**
 
 | Field name           | Description                                                                | Type / Unit    | Default value       | Required? |
 | -------------------- |:-------------------------------------------------------------------------- |:--------------:|:-------------------:|:---------:|
