@@ -15,7 +15,7 @@ module.exports = homebridge => {
   FakeGatoHistoryService = require('fakegato-history')(homebridge);
   CustomCharacteristic = require('./src/js/customcharacteristic.js')(homebridge);
 
-  homebridge.registerAccessory("homebridge-pms7003", "PMS7003", PMS7003Accessory);
+  homebridge.registerAccessory('homebridge-pms7003', 'PMS7003', PMS7003Accessory);
 }
 
 function PMS7003Accessory(log, config) {
@@ -47,8 +47,8 @@ function PMS7003Accessory(log, config) {
   // Services
   let informationService = new Service.AccessoryInformation();
   informationService
-    .setCharacteristic(Characteristic.Manufacturer, "Plantower")
-    .setCharacteristic(Characteristic.Model, "PMS7003")
+    .setCharacteristic(Characteristic.Manufacturer, 'Plantower')
+    .setCharacteristic(Characteristic.Model, 'PMS7003')
     .setCharacteristic(Characteristic.SerialNumber, `${os.hostname}-0`)
     .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version);
 
@@ -58,8 +58,8 @@ function PMS7003Accessory(log, config) {
   airQualityService.addCharacteristic(CustomCharacteristic.EveAirQuality);
   airQualityService.addCharacteristic(CustomCharacteristic.EveAirQualityUnknown);
 
-  let temperatureService = new Service.TemperatureSensor("PM10", "pm10");
-  let humidityService = new Service.HumiditySensor("0.3-0.5µm bucket", "bucket0_3");
+  let temperatureService = new Service.TemperatureSensor('PM10', 'pm10');
+  let humidityService = new Service.HumiditySensor('0.3-0.5µm bucket', 'bucket0_3');
 
   this.informationService = informationService;
   this.airQualityService = airQualityService;
@@ -68,7 +68,7 @@ function PMS7003Accessory(log, config) {
 
   // Start FakeGato for logging historical data
   if (this.enableFakeGato) {
-    this.fakeGatoHistoryService = new FakeGatoHistoryService("room", this, {
+    this.fakeGatoHistoryService = new FakeGatoHistoryService('room', this, {
       storage: 'fs',
       folder: this.fakeGatoStoragePath
     });
@@ -86,7 +86,7 @@ function PMS7003Accessory(log, config) {
 }
 
 // Error checking and averaging when saving PM2.5 and PM10
-Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
+Object.defineProperty(PMS7003Accessory.prototype, 'PM2_5', {
   set: function(PM2_5Reading) {
     if (PM2_5Reading > 1000 || PM2_5Reading < 0) {
       this.log(`Error: PM2.5 reading out of range: ` +
@@ -153,7 +153,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM2_5", {
 });
 
 // Basically the same things we're doing with PM2.5
-Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
+Object.defineProperty(PMS7003Accessory.prototype, 'PM10', {
   set: function(PM10Reading) {
     if (PM10Reading > 1000 || PM10Reading < 0) {
       this.log(`Error: PM10 reading out of range: ` +
@@ -200,7 +200,7 @@ Object.defineProperty(PMS7003Accessory.prototype, "PM10", {
 });
 
 // Basically the same thing as PM2.5, but with the 0.3-0.5µm bucket of particles
-Object.defineProperty(PMS7003Accessory.prototype, "B0_3", {
+Object.defineProperty(PMS7003Accessory.prototype, 'B0_3', {
   set: function(B0_3Reading) {
     if (B0_3Reading > 10000 || B0_3Reading < 0) {
       this.log(`Error: 0.3-0.5µm bucket reading out of range: ` +
@@ -247,12 +247,12 @@ Object.defineProperty(PMS7003Accessory.prototype, "B0_3", {
 // Sets up MQTT client based on config loaded in constructor
 PMS7003Accessory.prototype.setUpMQTT = function() {
   if (!this.enableMQTT) {
-    this.log.info("MQTT not enabled");
+    this.log.info('MQTT not enabled');
     return;
   }
 
   if (!this.mqttConfig) {
-    this.log.error("No MQTT config found");
+    this.log.error('No MQTT config found');
     return;
   }
 
@@ -279,10 +279,10 @@ PMS7003Accessory.prototype.setUpMQTT = function() {
   };
 
   this.mqttClient = mqtt.connect(this.mqttUrl);
-  this.mqttClient.on("connect", () => {
+  this.mqttClient.on('connect', () => {
     this.log(`MQTT client connected to ${this.mqttUrl}`);
   });
-  this.mqttClient.on("error", (err) => {
+  this.mqttClient.on('error', (err) => {
     this.log(`MQTT client error: ${err}`);
     client.end();
   });
@@ -291,7 +291,7 @@ PMS7003Accessory.prototype.setUpMQTT = function() {
 // Sends data to MQTT broker; must have called setupMQTT() previously
 PMS7003Accessory.prototype.publishToMQTT = function(topic, value) {
   if (!this.mqttClient.connected || !topic) {
-    this.log.error("MQTT client not connected, or no topic or value for MQTT");
+    this.log.error('MQTT client not connected, or no topic or value for MQTT');
     return;
   }
   this.mqttClient.publish(topic, String(value));
